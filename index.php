@@ -15,6 +15,7 @@ Class Roadmap {
 
     protected $pageMargin = 100;
     protected $fontSize = 22;
+    protected $lineWidth = 1;
 
     protected $mapTop = 0;
     protected $mapLeft = 0;
@@ -50,8 +51,27 @@ Class Roadmap {
         $p->set_info("Author", "@derfichtl");
         $p->set_info("Title", $this->c['title']);
 
-        // $p->begin_page_ext(0, 0, "width=a4.height height=a4.width");
-        $p->begin_page_ext($this->pageWidth, $this->pageHeight, ""); // "width=a4.height height=a4.width"
+        if(isset($this->c['size']) && ! empty($this->c['size'])) {
+            list($this->pageWidth, $this->pageHeight) = explode('x', $this->c['size']);
+        }
+
+        if(isset($this->c['fontSize']) && ! empty($this->c['fontSize'])) {
+            $this->fontSize = $this->c['fontSize'];
+        }
+
+        if(isset($this->c['barHeight']) && ! empty($this->c['barHeight'])) {
+            $this->barHeight = $this->c['barHeight'];
+        }
+
+        if(isset($this->c['pageMargin']) && ! empty($this->c['pageMargin'])) {
+            $this->pageMargin = $this->c['pageMargin'];
+        }
+
+        if(isset($this->c['lineWidth']) && ! empty($this->c['lineWidth'])) {
+            $this->lineWidth = $this->c['lineWidth'];
+        }
+
+        $p->begin_page_ext($this->pageWidth, $this->pageHeight, "");
 
         $this->colCount = count($this->c['cols']);
 
@@ -60,9 +80,9 @@ Class Roadmap {
         $this->mapRight = $this->pageWidth-$this->pageMargin*2;
 
 
-        if(isset($this->c['tagcol']) && $this->c['tagcol'] == true) {
-            $this->mapLeft += 100;
-            $this->mapRight -= 100;
+        if(isset($this->c['tagCol']) && is_numeric($this->c['tagCol'])) {
+            $this->mapLeft += $this->c['tagCol'];
+            $this->mapRight -= $this->c['tagCol'];
         }
 
         $this->font = $p->load_font("Helvetica", "iso8859-1", "");
@@ -143,14 +163,14 @@ Class Roadmap {
 
             $p->setcolor("both", "rgb", 0, 0, 0, 0);
             $p->setfont($this->font, $this->fontSize);
-            $p->fit_textline($col['title'], $left, $top, "boxsize {".$this->colWidth." 10} position {50 50}");
+            $p->fit_textline($col['title'], $left, $top, "boxsize {".$this->colWidth." ".($this->fontSize/2)."} position {50 50}");
         }
 
         $x = 0;
         $y = ($this->fontSize*2);
 
         $p->setcolor("stroke", "rgb", 0.6, 0.6, 0.6, 0.0);
-        $p->setlinewidth(2);
+        $p->setlinewidth($this->lineWidth);
 
         // top line
         $p->moveto($this->mapLeft, $this->pageMargin+$y);
@@ -283,10 +303,11 @@ Class Roadmap {
                 $lineOffset += $height;
             }
 
-            $textWidth = $p->info_textline($part['title'], "width", "");
-
             if (isset($part['tags'])) {
+
+                $textWidth = $p->info_textline($part['title'], "width", "");
                 $textOffset = $this->mapLeft+($part['start']*$this->colWidth)+$textWidth;
+
                 foreach($part['tags'] as $tag) {
                     $tagWidth = $this->tag($tag, $offset+$this->fontSize, $textOffset, $part['background']);
                     $textOffset += $tagWidth;
@@ -315,16 +336,23 @@ Class Roadmap {
     public function tag($tag, $y, $x, $color) {
         $p = $this->p;
 
-        list($r,$g,$b) = $this->formatColor($color);
-        $fontMargin = $this->fontSize*1.5;
+        $fontMargin = $this->fontSize*2;
 
-        // fillcolor={rgb $r $g $b}
+        if(! isset($this->c['tagCol']) || ! is_numeric($this->c['tagCol'])) {
+            $color = '#666666';
+        }
+
+        list($r,$g,$b) = $this->formatColor($color);
+        $p->setcolor("both", "rgb", $r, $g, $b, 0);
         $optlist = "matchbox={boxheight={ascender descender}
-            borderwidth=2 strokecolor={rgb $r $g $b}
+            borderwidth=".$this->lineWidth." strokecolor={rgb $r $g $b}
             offsetleft=-10 offsetright=10 offsettop=4 offsetbottom=0}";
 
-        $p->setcolor("both", "rgb", $r, $g, $b, 0);
-        $p->fit_textline($tag, $this->mapLeft-85, $y+5, $optlist); // $x+$fontMargin
+        if(isset($this->c['tagCol']) && is_numeric($this->c['tagCol'])) {
+            $p->fit_textline($tag, $this->mapLeft - $this->c['tagCol'], $y + 4, $optlist);
+        } else {
+            $p->fit_textline($tag, $x+$fontMargin, $y + 4, $optlist);
+        }
 
         $info = $p->info_textline($tag, "width", "");
         return $info+$this->fontSize;
