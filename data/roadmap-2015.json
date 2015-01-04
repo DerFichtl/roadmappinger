@@ -1,0 +1,126 @@
+{
+    "title": "Test Roadmap 2015 v1",
+    "tagcol": true,
+    "cols": [
+        {
+            "title": "Jan"
+        },
+        {
+            "title": "Feb"
+        },
+        {
+            "title": "Mar"
+        },
+        {
+            "title": "Apr"
+        },
+        {
+            "title": "Mai"
+        },
+        {
+            "title": "Jun"
+        },
+        {
+            "title": "Jul"
+        },
+        {
+            "title": "Aug"
+        },
+        {
+            "title": "Sep"
+        },
+        {
+            "title": "Okt"
+        },
+        {
+            "title": "Nov"
+        },
+        {
+            "title": "Dez"
+        }
+    ],
+    "blocks": [
+        {
+            "title": "First Things ...",
+            "bars": [
+                {
+                    "parts": [
+                        {
+                            "title": "Do some stuff",
+                            "start": 0,
+                            "end": 1,
+                            "tags":["Tag1"]
+                        }
+                    ]
+                },
+                {
+                    "title": "Do other stuff",
+                    "start": 0,
+                    "end": 2.5,
+                    "tags":["MrCool"]
+                },
+                {
+                    "parts": [
+                        {
+                            "title": "Do cool stuff",
+                            "start": 1,
+                            "end": 3,
+                            "background": "#99ccff",
+                            "tags":["Dev"]
+                        },
+                        {
+                            "title": "",
+                            "start": 3,
+                            "end": 5
+                        },
+                        {
+                            "title": "",
+                            "start": 5,
+                            "end": 6,
+                            "background": "#99ccff"
+                        },
+                        {
+                            "title": "",
+                            "start": 6,
+                            "end": 8
+                        }
+                    ]
+                },
+                {
+                    "parts": [
+                        {
+                            "title": "More things to do",
+                            "start": 7,
+                            "end": 9,
+                            "background": "#99ccff",
+                            "tags":["ADev"]
+                        },
+                        {
+                            "title": "Do it now",
+                            "start": 9,
+                            "end": 12
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "title": "Another Project",
+            "bars": [
+                {
+                    "title": "Optimizing",
+                    "start": 0,
+                    "end": 3,
+                    "tags":["Fichtl"]
+                },
+                {
+                    "title": "Performance",
+                    "start": 0,
+                    "end": 6,
+                    "background": "#99ccff",
+                    "tags":["Fichtl"]
+                }
+            ]
+        }
+    ]
+}
