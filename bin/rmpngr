@@ -1,0 +1,19 @@
+#!/usr/bin/php
+<?php
+
+require_once '../Roadmappinger.php';
+
+if(isset($argv[1]) && ! empty($argv[1])) {
+    $config = file_get_contents($argv[1]);
+    $roadmap = new Roadmap($config);
+    $roadmap->draw();
+
+    if(! isset($argv[2])) {
+        $argv[2] = str_replace('.json', '.pdf', $argv[1]);
+    }
+
+    $roadmap->write($argv[2]);
+} else {
+    echo "./rmpngr json-file.json pdf-file.pdf";
+}
+
