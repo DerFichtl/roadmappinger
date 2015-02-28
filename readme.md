@@ -12,9 +12,11 @@
 ## Requirements
 
 * PHP 5.3 is required
-* PDFLib is required
+* PDFLib is required (Install: http://www.pdflib.com/fileadmin/pdflib/pdf/support/PDFlib-in-PHP-HowTo.pdf)
 
 ## Render a PDF
 
-* Open in Browser: http://localhost:8080/roadmappinger/?file=data/roadmap-2015.json
+* Open in Browser: http://localhost:8080/roadmappinger/
+* Editor is left and preview is right
+* See example in /data/roadmap-2015.rd
 
