@@ -31,7 +31,13 @@ Class Roadmap {
 
     public function __construct($config) {
 
-        $this->c = json_decode($config, true);
+        if(strpos($config,'{') === 0) {
+            $this->c = json_decode($config, true);
+        } else {
+            $this->c = $this->parseConfig($config);
+        }
+
+
         if ($this->c == null) {
             die("JSON Error");
         }
@@ -59,6 +65,10 @@ Class Roadmap {
 
         if(isset($this->c['barHeight']) && ! empty($this->c['barHeight'])) {
             $this->barHeight = $this->c['barHeight'];
+        }
+
+        if(isset($this->c['barGap']) && ! empty($this->c['barGap'])) {
+            $this->barGap = $this->c['barGap'];
         }
 
         if(isset($this->c['pageMargin']) && ! empty($this->c['pageMargin'])) {
@@ -95,8 +105,8 @@ Class Roadmap {
         $this->title();
 
         $blockOffset = $this->mapTop+($this->fontSize*2.8);
-        $blockPadding = 20;
-        $barGap = 10;
+        $blockPadding = 8; // 20
+        $barGap = $this->barGap;
         $barHeight = $this->barHeight;
         $blockTitleHeight = $this->barHeight;
 
@@ -127,7 +137,7 @@ Class Roadmap {
                     $barOffset += $barHeight+$barGap;
                 }
 
-                $blockOffset += $blockHeight+$blockPadding;
+                $blockOffset += $blockHeight + 2; // + $blockPadding
             }
         }
 
@@ -156,12 +166,18 @@ Class Roadmap {
 
         foreach($this->c['cols'] as $i=>$col){
 
+            if(isset($col['title'])) {
+                $colTitle = $col['title'];
+            } else {
+                $colTitle = $col;
+            }
+
             $left = $this->mapLeft+($i*$this->colWidth);
             $top = $this->mapTop+($this->fontSize*2);
 
             $p->setcolor("both", "rgb", 0, 0, 0, 0);
             $p->setfont($this->font, $this->fontSize);
-            $p->fit_textline($col['title'], $left, $top, "boxsize {".$this->colWidth." ".($this->fontSize/2)."} position {50 50}");
+            $p->fit_textline($colTitle, $left, $top, "boxsize {".$this->colWidth." ".($this->fontSize/2)."} position {50 50}");
         }
 
         $x = 0;
@@ -229,9 +245,11 @@ Class Roadmap {
 
         $barHeight = 0;
         foreach($bars as $bar) {
+
+            $title = '';
             if(isset($bar['parts'])) {
                 $title = $bar['parts'][0]['title'];
-            } else {
+            } elseif (isset($bar['title'])) {
                 $title = $bar['title'];
             }
 
@@ -364,6 +382,117 @@ Class Roadmap {
             return array($r,$g,$b);
         }
         return array(0,0,0);
+    }
+
+    public function parseConfig($lines) {
+
+        $config = array();
+        $lines = preg_replace('/\/\/(.*)\n/', "\n", $lines);
+
+        $lines = explode("\n", $lines);
+        $blockIdx = -1;
+        $barIdx = 0;
+
+        foreach($lines as $line) {
+            if(! $line) {
+                continue;
+            }
+
+            if($line[0] == '!') {
+
+                list($key, $value) = explode(':', str_replace('!','',$line));
+                $key = trim($key);
+
+                if($key == 'cols') {
+
+                    $config[$key] = explode(',', $value);
+
+                } elseif ($key == 'colors') {
+
+                    $colors = explode(',', $value);
+
+                    foreach($colors as $color) {
+                        list($code, $hex) = explode('=', $color);
+                        $config[$key][trim($code)] = trim($hex);
+                    }
+
+                } else {
+                    $config[$key] = trim($value);
+                }
+
+            } elseif(strpos($line, '==') === 0) {
+
+                $blockIdx++;
+                $title = trim(str_replace('=', '',  $line));
+                $config['blocks'][$blockIdx] = array('title'=>$title, 'bars'=>array());
+
+            } elseif(strpos($line, '=') === 0) {
+
+                $config['title'] = trim(str_replace('=', '', $line));
+
+            } elseif($line[0] == '*') {
+
+                $parts = array();
+                $dates = array();
+
+                $configParts = explode(',', str_replace('*','',$line));
+                $partIdx = 0;
+
+                foreach($configParts as $part) {
+
+                    $part = trim($part);
+                    $start = false;
+                    $end = false;
+                    preg_match('/(\d+(\.\d)?(-\d+(\.\d)?)?)/', $part, $time);
+
+                    if($time) {
+                        if(strpos($time[0],'-') === false) {
+                            $start = $time[0];
+                        } else {
+                            list($start, $end) = explode('-', $time[0]);
+                        }
+
+                        $title = trim(str_replace($time[0], '', $part));
+                        $background = '';
+
+                        if(isset($config['colors']) && ! empty($config['colors'])) {
+                            foreach($config['colors'] as $code => $color) {
+                                if(strpos($title, $code) !== false) {
+                                    $title = trim(str_replace($code, '', $title));
+                                    $background = $color;
+                                }
+                            }
+                        }
+
+                        if(is_numeric($start) && is_numeric($end)) {
+                            $parts[$partIdx] = array('title'=>$title, 'start'=>$start, 'end'=>$end);
+                            if($background) {
+                                $parts[$partIdx]['background'] = $background;
+                            }
+                        } else {
+                            $dates[$partIdx] = array('title'=>$title, 'date'=>$start);
+                        }
+
+                        $partIdx++;
+                    }
+                }
+
+                if($parts) {
+                    $config['blocks'][$blockIdx]['bars'][$barIdx]['parts'] = $parts;
+                }
+
+                if($dates) {
+                    $config['blocks'][$blockIdx]['bars'][$barIdx]['dates'] = $dates;
+                }
+
+                if($dates || $parts) {
+                    $barIdx++;
+                }
+
+            }
+        }
+
+        return $config;
     }
 
 }

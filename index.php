@@ -3,11 +3,46 @@
 ini_set('display_errors', true);
 error_reporting(E_ALL);
 
-require_once 'Roadmappinger.php';
+if(isset($_REQUEST['preview'])) {
+    // if(! empty($_REQUEST['data'])) {
 
-if(isset($_GET['file'])) {
-    $config = file_get_contents($_GET['file']);
-    $roadmap = new Roadmap($config);
-    $roadmap->draw();
-    $roadmap->output();
+        require_once 'Roadmappinger.php';
+
+        $config = $_REQUEST['data'];
+        $roadmap = new Roadmap($config);
+        $roadmap->draw();
+        $roadmap->output();
+    // }
+    exit;
+} else {
+    $data = file_get_contents('data/roadmap-2015.rd');
 }
+
+?>
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        html, body { width:100%; height:100%; margin:0; padding:0; }
+        #roadmap { word-wrap:normal; white-space:pre; overflow:scroll; box-sizing:border-box; background:#eee; padding:20px; font-size:15px; margin:0; border:none; height:100%; width:40%; float:left; }
+        #preview { box-sizing:border-box; background:#fff; padding:0; margin:0; border:none; height:100%; width:60%; float:right; }
+    </style>
+    <script type="text/javascript">
+
+        function preview() {
+            var data = document.getElementById('roadmap').value;
+            console.log(data);
+            parent.frames[0].document.location.href = '?preview=1&data=' + encodeURIComponent(data);
+        }
+        window.onload = preview;
+        window.setInterval(function(){ preview(); }, 10000);
+
+    </script>
+</head>
+<body>
+    <textarea id="roadmap"><?=$data?></textarea>
+    <iframe frameborder="0" border="0" id="preview" name="preview" src="#"></iframe>
+</body>
+</html>
+
+
