@@ -5,17 +5,24 @@ require_once '../Roadmappinger.php';
 
 if(isset($argv[1]) && ! empty($argv[1])) {
 
-    $config = file_get_contents($argv[1]);
-    $roadmap = new Roadmap($config);
-    $roadmap->draw();
+    try {
+        $config = file_get_contents($argv[1]);
 
-    if(! isset($argv[2])) {
-        $argv[2] = str_replace('.json', '.pdf', $argv[1]);
+        $roadmap = new Roadmap($config);
+        $roadmap->draw();
+
+        if (!isset($argv[2])) {
+            $argv[2] = str_replace('.json', '.pdf', $argv[1]);
+            $argv[2] = str_replace('.rd', '.pdf', $argv[2]);
+        }
+
+        $roadmap->write($argv[2]);
+    } catch(Exception $ex) {
+        echo $ex->getMessage()."\n";
+        echo "./rmpngr json-file.json pdf-file.pdf\n";
     }
 
-    $roadmap->write($argv[2]);
-
 } else {
-    echo "./rmpngr json-file.json pdf-file.pdf";
+    echo "./rmpngr json-file.json pdf-file.pdf\n";
 }
 

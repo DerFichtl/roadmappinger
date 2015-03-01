@@ -39,12 +39,12 @@ Class Roadmap {
 
 
         if ($this->c == null) {
-            die("JSON Error");
+            throw new Exception("Empty config or not parseable.");
         }
 
         $this->p = $p = new PDFlib();
         if ($p->begin_document("", "") == 0) {
-            die("Error: " . $p->get_errmsg());
+            throw new Exception($p->get_errmsg());
         }
 
         $p->set_parameter("topdown", "true");

@@ -4,18 +4,22 @@ ini_set('display_errors', true);
 error_reporting(E_ALL);
 
 if(isset($_REQUEST['preview'])) {
-    // if(! empty($_REQUEST['data'])) {
 
+    try {
         require_once 'Roadmappinger.php';
 
         $config = $_REQUEST['data'];
         $roadmap = new Roadmap($config);
         $roadmap->draw();
         $roadmap->output();
-    // }
+    } catch(Exception $ex) {
+        var_dump($ex);
+    }
+
     exit;
+
 } else {
-    $data = file_get_contents('data/roadmap-2015.rd');
+    $defaultRoadmapData = file_get_contents('data/roadmap-2015.rd');
 }
 
 ?>
@@ -35,12 +39,20 @@ if(isset($_REQUEST['preview'])) {
             parent.frames[0].document.location.href = '?preview=1&data=' + encodeURIComponent(data);
         }
         window.onload = preview;
-        window.setInterval(function(){ preview(); }, 10000);
+
+        var timeout;
+        window.onkeyup = function(){
+            if(timeout){
+                clearTimeout(timeout);
+                timeout = null;
+            }
+            timeout = setTimeout(preview, 1000);
+        }
 
     </script>
 </head>
 <body>
-    <textarea id="roadmap"><?=$data?></textarea>
+    <textarea id="roadmap"><?=$defaultRoadmapData?></textarea>
     <iframe frameborder="0" border="0" id="preview" name="preview" src="#"></iframe>
 </body>
 </html>
