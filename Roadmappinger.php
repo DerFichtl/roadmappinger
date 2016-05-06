@@ -3,7 +3,7 @@
 Class Roadmap {
 
     protected $p = null;
-    protected $c = null;
+    protected $c = null; // config
 
     // A1 = 2380 x 1684
     // A3 = 842 x 1190
@@ -25,6 +25,11 @@ Class Roadmap {
 
     protected $colCount = 0;
     protected $colWidth = 0;
+
+    protected $tagColor = '#666666';
+    protected $tagCol = 0;
+
+    protected $lineColor = '#666666';
 
     protected $font = null;
     protected $buffer = null;
@@ -79,6 +84,11 @@ Class Roadmap {
             $this->lineWidth = $this->c['lineWidth'];
         }
 
+        if(isset($this->c['tagColor']) && ! empty($this->c['tagColor'])) {
+            $this->tagColor = $this->c['tagColor'];
+        }
+
+
         $p->begin_page_ext($this->pageWidth, $this->pageHeight, "");
 
         $this->colCount = count($this->c['cols']);
@@ -91,6 +101,7 @@ Class Roadmap {
         if(isset($this->c['tagCol']) && is_numeric($this->c['tagCol'])) {
             $this->mapLeft += $this->c['tagCol'];
             $this->mapRight -= $this->c['tagCol'];
+            $this->tagCol = $this->c['tagCol'];
         }
 
         $this->font = $p->load_font("Helvetica", "iso8859-1", "");
@@ -130,7 +141,12 @@ Class Roadmap {
 
                     if (isset($bar['dates'])) {
                         foreach($bar['dates'] as $date) {
-                            $this->date($date['title'], $barOffset+$this->barHeight/2, $date['date']);
+
+                            if(! isset($date['color'])) {
+                                $date['color'] = '';
+                            }
+
+                            $this->date($date['title'], $barOffset+$this->barHeight/2, $date['date'], $date['color']);
                         }
                     }
 
@@ -183,7 +199,8 @@ Class Roadmap {
         $x = 0;
         $y = ($this->fontSize*2);
 
-        $p->setcolor("stroke", "rgb", 0.6, 0.6, 0.6, 0.0);
+        list($r,$g,$b) = $this->formatColor($this->lineColor);
+        $p->setcolor("stroke", "rgb", $r, $g, $b, 0.0);
         $p->setlinewidth($this->lineWidth);
 
         // top line
@@ -224,7 +241,7 @@ Class Roadmap {
             $p->setcolor("both", "rgb", 0, 0, 0, 0);
             $p->setfont($this->font, $fontSize);
 
-            $p->fit_textline($title, $this->mapLeft+$fontMargin*2, $offset+$fontSize+$fontMargin, "");
+            $p->fit_textline(utf8_decode($title), $this->mapLeft+$fontMargin*2, $offset+$fontSize+$fontMargin, "");
         }
 
         $gstate = $p->create_gstate("opacityfill=.4");
@@ -275,6 +292,10 @@ Class Roadmap {
 
         foreach($bar['parts'] as $part) {
 
+            if(! isset($part['start']) || ! isset($part['end'])) {
+                continue;
+            }
+
             if(! isset($part['background'])) {
                 $part['background'] = "#88bf00";
             }
@@ -315,38 +336,43 @@ Class Roadmap {
             $lineOffset = $offset;
             $p->setfont($this->font, $fontSize);
             foreach($partTitle as $line) {
-                $p->fit_textline($line, $left+($fontMargin*2)+$boxMargin, $lineOffset+$fontSize, "");
+                $p->fit_textline(utf8_decode($line), $left+($fontMargin*2)+$boxMargin, $lineOffset+$fontSize, "");
                 $lineOffset += $height;
             }
 
             if (isset($part['tags'])) {
 
-                $textWidth = $p->info_textline($part['title'], "width", "");
+                $textWidth = $p->info_textline(utf8_decode($part['title']), "width", "");
                 $textOffset = $this->mapLeft+($part['start']*$this->colWidth)+$textWidth;
 
                 foreach($part['tags'] as $tag) {
-                    $tagWidth = $this->tag($tag, $offset+$this->fontSize, $textOffset, $part['background']);
+                    $tagWidth = $this->tag($tag, $offset+$this->fontSize, $textOffset, $this->tagColor);
                     $textOffset += $tagWidth;
                 }
             }
         }
     }
 
-    public function date($title, $offset, $pos) {
+    public function date($title, $offset, $pos, $color = '') {
         $p = $this->p;
 
         $left = $this->mapLeft+($pos*$this->colWidth);
         $fontSize = $this->fontSize;
-        // $fontMargin = $this->fontSize;
         $fontMargin = $this->fontSize/3;
 
-        $p->setcolor("both", "rgb", 1, 1, 0, 0.0);
+        if($color) {
+            list($r,$g,$b) = $this->formatColor($color);
+            $p->setcolor("both", "rgb", $r, $g, $b, 0.0);
+        } else {
+            $p->setcolor("both", "rgb", 1, 1, 0, 0.0);
+        }
+
         $p->circle($left, $offset, $this->barHeight/2);
         $p->fill();
 
         $p->setcolor("both", "rgb", 0.3, 0.3, 0.3, 0.0);
         $p->setfont($this->font, $fontSize);
-        $p->fit_textline($title, $left+$fontMargin*3, $offset+$fontMargin, "");
+        $p->fit_textline(utf8_decode($title), $left+$fontMargin*3, $offset+$fontMargin, "");
     }
 
     public function tag($tag, $y, $x, $color) {
@@ -365,9 +391,9 @@ Class Roadmap {
             offsetleft=-10 offsetright=10 offsettop=4 offsetbottom=0}";
 
         if(isset($this->c['tagCol']) && is_numeric($this->c['tagCol'])) {
-            $p->fit_textline($tag, $this->mapLeft - $this->c['tagCol'], $y + 4, $optlist);
+            $p->fit_textline(utf8_decode($tag), $this->mapLeft - $this->c['tagCol'], $y + 4, $optlist);
         } else {
-            $p->fit_textline($tag, $x+$fontMargin, $y + 4, $optlist);
+            $p->fit_textline(utf8_decode($tag), $x+$fontMargin, $y + 4, $optlist);
         }
 
         $info = $p->info_textline($tag, "width", "");
@@ -393,7 +419,7 @@ Class Roadmap {
         $blockIdx = -1;
         $barIdx = 0;
 
-        foreach($lines as $line) {
+        foreach($lines as $lineIdx => $line) {
             if(! $line) {
                 continue;
             }
@@ -402,6 +428,12 @@ Class Roadmap {
 
                 list($key, $value) = explode(':', str_replace('!','',$line));
                 $key = trim($key);
+
+                if(! in_array($key, array('size','fontSize','pageMargin','barHeight','barGap',
+                    'lineWidth','cols','colors','tagCol','tagColor'))) {
+
+                    throw new Exception("Unknown config Key '$key' on line $lineIdx.");
+                }
 
                 if($key == 'cols') {
 
@@ -414,10 +446,37 @@ Class Roadmap {
                     foreach($colors as $color) {
                         list($code, $hex) = explode('=', $color);
                         $config[$key][trim($code)] = trim($hex);
+
+                        if(! $this->isColor($hex)) {
+                            throw new Exception("Unknown color Key '$hex' on line $lineIdx ... must be something like #ffffff.");
+                        }
                     }
 
+                } elseif ($key == 'size') {
+
+                    $value = trim($value);
+                    if(! $this->isSize($value)) {
+                        throw new Exception("Must be a size (like 123x123) but it is '$value' on line $lineIdx.");
+                    }
+
+                    $config[$key] = $value;
+
+                } elseif ($key == 'tagColor') {
+
+                    $value = trim($value);
+                    if(! $this->isColor($value)) {
+                        throw new Exception("Unknown color Key '$value' on line $lineIdx ... must be something like #ffffff.");
+                    }
+                    $config[$key] = $value;
+
                 } else {
-                    $config[$key] = trim($value);
+
+                    $value = trim($value);
+                    if(! is_numeric($value)) {
+                        throw new Exception("Must be numeric but it is '$value' on line $lineIdx.");
+                    }
+
+                    $config[$key] = $value;
                 }
 
             } elseif(strpos($line, '==') === 0) {
@@ -435,7 +494,7 @@ Class Roadmap {
                 $parts = array();
                 $dates = array();
 
-                $configParts = explode(',', str_replace('*','',$line));
+                $configParts = explode(';', str_replace('*','',$line));
                 $partIdx = 0;
 
                 foreach($configParts as $part) {
@@ -446,6 +505,7 @@ Class Roadmap {
                     preg_match('/(\d+(\.\d)?(-\d+(\.\d)?)?)/', $part, $time);
 
                     if($time) {
+
                         if(strpos($time[0],'-') === false) {
                             $start = $time[0];
                         } else {
@@ -454,6 +514,16 @@ Class Roadmap {
 
                         $title = trim(str_replace($time[0], '', $part));
                         $background = '';
+
+                        $tags = array();
+                        preg_match('/\[.*\]/', $part, $tags);
+                        if($tags) {
+                            $title = trim(str_replace($tags[0], '', $title));
+
+                            foreach($tags as $i => $tag) {
+                                $tags[$i] = str_replace(array('[',']'), array('',''), $tag);
+                            }
+                        }
 
                         if(isset($config['colors']) && ! empty($config['colors'])) {
                             foreach($config['colors'] as $code => $color) {
@@ -465,12 +535,14 @@ Class Roadmap {
                         }
 
                         if(is_numeric($start) && is_numeric($end)) {
-                            $parts[$partIdx] = array('title'=>$title, 'start'=>$start, 'end'=>$end);
+                            $parts[$partIdx] = array('title'=>$title, 'start'=>$start, 'end'=>$end, 'tags'=>$tags);
                             if($background) {
                                 $parts[$partIdx]['background'] = $background;
                             }
-                        } else {
-                            $dates[$partIdx] = array('title'=>$title, 'date'=>$start);
+                        }
+
+                        if($end == false) {
+                            $dates[$partIdx] = array('title'=>$title, 'date'=>$start, 'color'=>$background);
                         }
 
                         $partIdx++;
@@ -495,5 +567,13 @@ Class Roadmap {
         return $config;
     }
 
+
+    public static function isColor($str) {
+        return @preg_match("/^#[a-f0-9]{6}$/i", $str);
+    }
+
+    public static function isSize($str) {
+        return @preg_match("/^[0-9]{2,5}x[0-9]{2,5}$/i", $str);
+    }
 }
 
