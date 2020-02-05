@@ -22,5 +22,3 @@
 * Editor is left and preview is right
 * See example data in /data/roadmap-2015.rd
 
-![Screenshot](http://oi60.tinypic.com/28u0nrl.jpg)
-
