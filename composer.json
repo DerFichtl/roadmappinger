@@ -2,14 +2,8 @@
     "name": "derfichtl/roadmappinger",
     "homepage": "https://github/derfichtl",
     "license": "MIT",
-    "repositories": [
-        {
-            "type": "vcs",
-            "url": "https://github.com/derfichtl/mpdf"
-        }
-    ],
     "require": {
         "php": "^7.4",
-        "mpdf/mpdf": "dev-master#2b36018184da157a8782c475681d673fa1020f0e"
+        "mpdf/mpdf": "^8.0"
     }
 }
