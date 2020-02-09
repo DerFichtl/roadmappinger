@@ -1,18 +1,20 @@
 {
+    "name": "DerFichtl/Roadmappinger",
+    "homepage": "https://github/derfichtl",
+    "license": "MIT",
     "require": {
         "php": "^7.4",
         "mpdf/mpdf": "^8.0"
     },
     "scripts": {
         "post-install-cmd": [
-            "cp config/FontVariables.php vendor/mpdf/mpdf/config",
-            "rm vendor/mpdf/mpdf/ttfonts/*",
             "ls -labh vendor"
         ],
         "post-update-cmd": [
-            "cp config/FontVariables.php vendor/mpdf/mpdf/config",
-            "rm vendor/mpdf/mpdf/ttfonts/*",
             "ls -labh vendor"
         ]
+    },
+    "suggest": {
+        "monolog/monolog": "Allows more advanced logging of the application flow"
     }
 }
