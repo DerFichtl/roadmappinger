@@ -8,6 +8,11 @@
 
         echo urldecode($_GET['save']);
         exit;
+
+    } elseif (isset($_GET['preview'])) {
+
+        require_once __DIR__.'/preview.php';
+        exit;
     }
 
     $defaultRoadmapData = file_get_contents('../data/roadmap.rd');
@@ -27,7 +32,7 @@
     </div>
     <div id="sep"></div>
 
-    <iframe id="preview" name="preview" frameborder="0" border="0" src="preview.php?data="></iframe>
+    <iframe id="preview" name="preview" frameborder="0" border="0" src="?preview="></iframe>
     <script type="text/javascript" src="app.js"></script>
 </body>
 </html>

@@ -1,1 +1,0 @@
-<?php header('Location: ./gui/index.php'); ?>

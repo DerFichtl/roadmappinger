@@ -4,9 +4,9 @@ ini_set('display_errors', true);
 error_reporting(E_ALL);
 
 try {
-    require_once '../Roadmappinger.php';
+    require_once __DIR__.'/../Roadmappinger.php';
 
-    $config = $_REQUEST['data'];
+    $config = $_REQUEST['preview'];
 
     $roadmap = new Roadmap($config);
     $roadmap->draw();
@@ -20,16 +20,8 @@ try {
 
 if(isset($ex)) {
 ?>
-<!DOCTYPE html>
-<html>
-    <head>
-        <!-- <link rel="stylesheet" href="screen.css" />
-        <script type="text/javascript" src="app.js"></script> -->
-    </head>
-    <body>
-        <?php echo $ex->getMessage(); ?>
-    </body>
-</html>
+    <!DOCTYPE html>
+    <html><body><?php echo $ex->getMessage(); ?>
 <?php } ?>
 
 

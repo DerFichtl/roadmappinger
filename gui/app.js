@@ -89,7 +89,7 @@ function preview() {
     var data = textarea.value;
     var cursorPos = 0;
 
-    var iframeUrl = 'preview.php?data=' + encodeURIComponent(data);
+    var iframeUrl = '?preview=' + encodeURIComponent(data);
     var elem = document.getElementById('preview');
     elem.contentWindow.location.href = iframeUrl;
 
