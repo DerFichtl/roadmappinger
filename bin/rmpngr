@@ -1,7 +1,7 @@
 #!/usr/bin/php
 <?php
 
-require_once '../Roadmappinger.php';
+require_once __DIR__ . '/../Roadmappinger.php';
 
 if(isset($argv[1]) && ! empty($argv[1])) {
 

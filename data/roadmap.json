@@ -1,11 +1,11 @@
 {
-    "title": "Test Roadmap 2015 v1",
-    "tagCol": 60,
-    "size": "1190x842",
-    "pageMargin": 40,
-    "fontSize": 13,
-    "barHeight": 18,
-    "lineWidth": 1,
+    "title": "Simple Roadmap 2020 - v1",
+    "size": "a4",
+    "pageMargin": 10,
+    "fontSize": 8,
+    "barHeight": 6,
+    "barGap": 1,
+    "lineWidth": 0.2,
     "cols": [
         {
             "title": "Jan"
@@ -44,6 +44,17 @@
             "title": "Dez"
         }
     ],
+    "colors":[
+        {
+            "#B": "#99ccff"
+        },
+        {
+            "#G": "#88bf00"
+        },
+        {
+            "#Y": "#ffff00"
+        }
+    ],
     "blocks": [
         {
             "title": "First Things ...",
@@ -54,7 +65,7 @@
                             "title": "Stuff",
                             "start": 0,
                             "end": 1,
-                            "tags":["Tag1"]
+                            "tags":["Mr Pink"]
                         }
                     ]
                 },
@@ -62,7 +73,7 @@
                     "title": "Do other stuff",
                     "start": 0,
                     "end": 2.5,
-                    "tags":["MrCool"]
+                    "tags":["Mr Black"]
                 },
                 {
                     "parts": [
@@ -71,7 +82,7 @@
                             "start": 1,
                             "end": 3,
                             "background": "#99ccff",
-                            "tags":["Dev"]
+                            "tags":["Mr White"]
                         },
                         {
                             "title": "",
@@ -92,8 +103,9 @@
                     ],
                     "dates": [
                         {
-                            "title": "A Date",
-                            "date": 3
+                            "title": "A Milestone",
+                            "date": 3,
+                            "background": "#ffff00"
                         }
                     ]
                 },
@@ -104,7 +116,7 @@
                             "start": 7,
                             "end": 9,
                             "background": "#99ccff",
-                            "tags":["ADev"]
+                            "tags":["Mr Pink"]
                         },
                         {
                             "title": "Do it now",
@@ -122,14 +134,14 @@
                     "title": "Optimizing",
                     "start": 0,
                     "end": 3,
-                    "tags":["Fichtl"]
+                    "tags":["Mr Pink"]
                 },
                 {
                     "title": "Performance",
                     "start": 0,
                     "end": 6,
                     "background": "#99ccff",
-                    "tags":["Fichtl"]
+                    "tags":["Mr White"]
                 }
             ]
         }

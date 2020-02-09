@@ -1,14 +1,17 @@
 <?php
 
+require_once __DIR__ . '/vendor/autoload.php';
+
 Class Roadmap {
 
     protected $p = null;
     protected $c = null; // config
 
-    // A1 = 2380 x 1684
-    // A3 = 842 x 1190
-    protected $pageWidth = 2380;
-    protected $pageHeight = 1684;
+    protected static $sizes = ['A0'=>'1189x841','A4'=>'297x210'];
+    
+    protected $pageSize = 'A4';
+    protected $pageWidth = 1190;
+    protected $pageHeight = 842;
 
     protected $pageMargin = 100;
     protected $fontSize = 22;
@@ -42,26 +45,19 @@ Class Roadmap {
             $this->c = $this->parseConfig($config);
         }
 
-
         if ($this->c == null) {
             throw new Exception("Empty config or not parseable.");
         }
 
-        $this->p = $p = new PDFlib();
-        if ($p->begin_document("", "") == 0) {
-            throw new Exception($p->get_errmsg());
-        }
+        $this->p = $p = new \Mpdf\Mpdf(['mode'=>'utf-8', 'dpi'=>'72']);
 
-        $p->set_parameter("topdown", "true");
-        $p->set_parameter("usercoordinates", "true");
-        // p.scale(28.3465, 28.3465);
-
-        $p->set_info("Creator", "https://github.com/DerFichtl/roadmappinger");
-        $p->set_info("Author", "@derfichtl");
-        $p->set_info("Title", $this->c['title']);
+        $p->SetCreator("https://github.com/DerFichtl/roadmappinger");
+        $p->SetAuthor("@derfichtl");
+        $p->SetTitle($this->c['title']);
 
         if(isset($this->c['size']) && ! empty($this->c['size'])) {
-            list($this->pageWidth, $this->pageHeight) = explode('x', $this->c['size']);
+            $this->pageSize = strtoupper($this->c['size']);
+            list($this->pageWidth, $this->pageHeight) = explode('x', self::$sizes[$this->pageSize]);
         }
 
         if(isset($this->c['fontSize']) && ! empty($this->c['fontSize'])) {
@@ -88,8 +84,8 @@ Class Roadmap {
             $this->tagColor = $this->c['tagColor'];
         }
 
+        $p->AddPageByArray(['orientation'=>'L', 'sheet-size'=>$this->pageSize]);
 
-        $p->begin_page_ext($this->pageWidth, $this->pageHeight, "");
 
         $this->colCount = count($this->c['cols']);
 
@@ -97,26 +93,21 @@ Class Roadmap {
         $this->mapLeft = $this->pageMargin;
         $this->mapRight = $this->pageWidth-$this->pageMargin*2;
 
-
         if(isset($this->c['tagCol']) && is_numeric($this->c['tagCol'])) {
             $this->mapLeft += $this->c['tagCol'];
             $this->mapRight -= $this->c['tagCol'];
             $this->tagCol = $this->c['tagCol'];
         }
 
-        $this->font = $p->load_font("Helvetica", "iso8859-1", "");
-
-        if ($this->font == -1) {
-            throw new Exception("Error: " + $p->get_errmsg());
-        }
+        $this->font = "Arial";
     }
 
     public function draw() {
         $this->grid();
         $this->title();
 
-        $blockOffset = $this->mapTop+($this->fontSize*2.8);
-        $blockPadding = 8; // 20
+        $blockOffset = $this->mapTop + ($this->fontSize*2);
+        $blockPadding = 4; // 20
         $barGap = $this->barGap;
         $barHeight = $this->barHeight;
         $blockTitleHeight = $this->barHeight;
@@ -131,7 +122,7 @@ Class Roadmap {
             if ($block['bars']) {
                 $this->block($block['title'], $blockOffset, $blockHeight);
 
-                $barOffset = $blockOffset+($this->fontSize*2);
+                $barOffset = $blockOffset+$this->fontSize;
                 if(! $block['title']) {
                     $barOffset -= $blockTitleHeight;
                 }
@@ -142,25 +133,22 @@ Class Roadmap {
                     if (isset($bar['dates'])) {
                         foreach($bar['dates'] as $date) {
 
-                            if(! isset($date['color'])) {
-                                $date['color'] = '';
+                            if(! isset($date['background'])) {
+                                $date['background'] = '';
                             }
 
-                            $this->date($date['title'], $barOffset+$this->barHeight/2, $date['date'], $date['color']);
+                            $this->date($date['title'], $barOffset+$this->barHeight/2, $date['date'], $date['background']);
                         }
                     }
 
-                    $barOffset += $barHeight+$barGap;
+                    $barOffset += $barHeight + $barGap;
                 }
 
-                $blockOffset += $blockHeight + 2; // + $blockPadding
+                $blockOffset += $blockHeight + $blockPadding;
             }
         }
 
-        $this->p->end_page_ext("");
-        $this->p->end_document("");
-
-        return $this->buffer = $this->p->get_buffer();
+        return $this->buffer = $this->p->Output('', 'S');
     }
 
     public function output() {
@@ -177,8 +165,10 @@ Class Roadmap {
     }
 
     public function grid() {
+
         $p = $this->p;
         $this->colWidth = ($this->pageWidth-($this->pageMargin+$this->mapLeft))/$this->colCount;
+        $this->colHeight = ($this->pageHeight-($this->pageMargin+$this->mapTop));
 
         foreach($this->c['cols'] as $i=>$col){
 
@@ -189,36 +179,32 @@ Class Roadmap {
             }
 
             $left = $this->mapLeft+($i*$this->colWidth);
-            $top = $this->mapTop+($this->fontSize*2);
+            $top = $this->mapTop+($this->fontSize/2);
 
-            $p->setcolor("both", "rgb", 0, 0, 0, 0);
-            $p->setfont($this->font, $this->fontSize);
-            $p->fit_textline($colTitle, $left, $top, "boxsize {".$this->colWidth." ".($this->fontSize/2)."} position {50 50}");
+            $p->SetTextColor(0, 0, 0);
+            $p->SetFont($this->font, '', $this->fontSize);
+
+            $p->SetXY($left, $top);
+            $p->Cell($this->colWidth, $this->fontSize/2, $colTitle, 0, 0, 'C');
         }
 
         $x = 0;
-        $y = ($this->fontSize*2);
+        $y = ($this->fontSize);
 
-        list($r,$g,$b) = $this->formatColor($this->lineColor);
-        $p->setcolor("stroke", "rgb", $r, $g, $b, 0.0);
-        $p->setlinewidth($this->lineWidth);
+        list($r, $g, $b) = $this->formatColor($this->lineColor);
+        $p->SetDrawColor($r, $g, $b);
+        $p->SetLineWidth($this->lineWidth);
 
         // top line
-        $p->moveto($this->mapLeft, $this->pageMargin+$y);
-        $p->lineto($this->pageWidth-$this->pageMargin, $this->pageMargin+$y);
-        $p->stroke();
+        $p->Line($this->mapLeft, $this->pageMargin+$y, $this->pageWidth-($this->pageMargin), $this->pageMargin+$y);
 
         // bottom line
-        $p->moveto($this->mapLeft, $this->pageHeight-$this->pageMargin);
-        $p->lineto($this->pageWidth-$this->pageMargin, $this->pageHeight-$this->pageMargin);
-        $p->stroke();
+        $p->Line($this->mapLeft, $this->pageHeight-$this->pageMargin, $this->pageWidth-$this->pageMargin, $this->pageHeight-$this->pageMargin);
 
-        $p->setdash(8, 8);
+        // $p->setdash(8, 8);
 
         for($i=1; $i<=$this->colCount+1; $i++) {
-            $p->moveto($x+$this->mapLeft, $this->pageMargin+$y);
-            $p->lineto($x+$this->mapLeft, $this->pageHeight-$this->pageMargin);
-            $p->stroke();
+            $p->Line($x+$this->mapLeft, $this->pageMargin+$y, $x+$this->mapLeft, $this->pageHeight-$this->pageMargin);
             $x = $i*$this->colWidth;
         }
     }
@@ -226,39 +212,33 @@ Class Roadmap {
     public function title() {
         $p = $this->p;
 
-        $p->setcolor("both", "rgb", 0, 0, 0, 0);
-        $p->setfont($this->font, $this->fontSize*2);
-        $p->fit_textline($this->c['title'], $this->mapLeft, $this->pageMargin, "");
+        $p->SetTextColor(0, 0, 0);
+        $p->SetFont($this->font, '', $this->fontSize*2);
+
+        $p->Text($this->mapLeft, $this->pageMargin, $this->c['title']);
     }
 
     public function block($title, $offset, $height) {
         $p = $this->p;
 
         $fontSize = $this->fontSize;
-        $fontMargin = $this->fontSize/3;
+        $fontMargin = $this->fontSize/2.5;
 
         if($title) {
-            $p->setcolor("both", "rgb", 0, 0, 0, 0);
-            $p->setfont($this->font, $fontSize);
+            $p->SetTextColor(0, 0, 0);
+            $p->SetFont($this->font, '', $this->fontSize);
 
-            $p->fit_textline(utf8_decode($title), $this->mapLeft+$fontMargin*2, $offset+$fontSize+$fontMargin, "");
+            $p->Text($this->mapLeft+$fontMargin, $offset+$fontSize/2, utf8_decode($title));
         }
 
-        $gstate = $p->create_gstate("opacityfill=.4");
-        $p->set_gstate($gstate);
-
-        $p->setcolor("both", "rgb", 0.9, 0.9, 0.9, 0.0);
-        $p->rect($this->mapLeft, $offset+$height, $this->mapRight, $height);
-        $p->fill();
-
-        $gstate = $p->create_gstate("opacityfill=1");
-        $p->set_gstate($gstate);
+        $p->SetAlpha(0.1);
+        $p->SetFillColor(0, 0, 0);
+        $p->Rect($this->mapLeft, $offset, $this->mapRight, $height, 'F');
+        $p->SetAlpha(1);
     }
 
 
     public function calcBlockHeight($bars, $height) {
-
-        // return count($bars)*$height;
 
         $barHeight = 0;
         foreach($bars as $bar) {
@@ -277,14 +257,16 @@ Class Roadmap {
 
             $barHeight += count($partTitle)*$height;
         }
+
         return $barHeight;
     }
+
 
     public function bar($bar, $offset, $height) {
         $p = $this->p;
 
         $fontSize = $this->fontSize;
-        $fontMargin = $this->fontSize/3;
+        $fontMargin = $this->fontSize/2.5;
 
         if(! isset($bar['parts'])) {
             $bar['parts'][0] = $bar;
@@ -312,44 +294,42 @@ Class Roadmap {
                 $partTitle = array($partTitle);
             }
 
-            $gstate = $p->create_gstate("opacityfill=.6");
-            $p->set_gstate($gstate);
+            $p->SetAlpha(0.6);
 
             list($r,$g,$b) = $this->formatColor($part['background']);
-            $p->setcolor("both", "rgb", $r, $g, $b, 0);
-
+            $p->SetFillColor($r, $g, $b);
 
             $boxMargin = 0;
             if (isset($part['margin'])) {
                 $boxMargin = $part['margin'];
             }
 
-            $p->rect($left+$boxMargin, $offset+$height*count($partTitle)+$boxMargin, $width-$boxMargin*2, $height*count($partTitle)+($boxMargin*2));
-            $p->fill();
+            $p->Rect($left+$boxMargin, $offset, $width-$boxMargin*2, $height, "F");
 
-            $gstate = $p->create_gstate("opacityfill=1");
-            $p->set_gstate($gstate);
+            $p->SetAlpha(1);
 
             list($r,$g,$b) = $this->formatColor($part['color']);
-            $p->setcolor("both", "rgb", $r, $g, $b, 0);
+            $p->SetDrawColor($r, $g, $b);
 
             $lineOffset = $offset;
-            $p->setfont($this->font, $fontSize);
+            $p->SetFont($this->font, "", $fontSize);
+
             foreach($partTitle as $line) {
-                $p->fit_textline(utf8_decode($line), $left+($fontMargin*2)+$boxMargin, $lineOffset+$fontSize, "");
+                $p->Text($left+$fontMargin+$boxMargin, $lineOffset+($height/2+$fontSize/8), utf8_decode($line));
                 $lineOffset += $height;
             }
 
-            if (isset($part['tags'])) {
+            /* if (isset($part['tags'])) {
 
-                $textWidth = $p->info_textline(utf8_decode($part['title']), "width", "");
+                // $textWidth = $p->info_textline(utf8_decode($part['title']), "width", "");
+                $textWidth = 0;
                 $textOffset = $this->mapLeft+($part['start']*$this->colWidth)+$textWidth;
 
                 foreach($part['tags'] as $tag) {
                     $tagWidth = $this->tag($tag, $offset+$this->fontSize, $textOffset, $this->tagColor);
                     $textOffset += $tagWidth;
                 }
-            }
+            } */
         }
     }
 
@@ -358,34 +338,39 @@ Class Roadmap {
 
         $left = $this->mapLeft+($pos*$this->colWidth);
         $fontSize = $this->fontSize;
-        $fontMargin = $this->fontSize/3;
+        $fontMargin = $this->fontSize/2;
 
         if($color) {
-            list($r,$g,$b) = $this->formatColor($color);
-            $p->setcolor("both", "rgb", $r, $g, $b, 0.0);
+            list($r, $g, $b) = $this->formatColor($color);
+            $p->SetFillColor($r, $g, $b);
         } else {
-            $p->setcolor("both", "rgb", 1, 1, 0, 0.0);
+            $p->SetFillColor(1, 1, 0);
         }
 
-        $p->circle($left, $offset, $this->barHeight/2);
-        $p->fill();
+        $p->Circle($left, $offset, $this->barHeight/2, "F");
+        $p->SetFont($this->font, "", $fontSize);
 
-        $p->setcolor("both", "rgb", 0.3, 0.3, 0.3, 0.0);
-        $p->setfont($this->font, $fontSize);
-        $p->fit_textline(utf8_decode($title), $left+$fontMargin*3, $offset+$fontMargin, "");
+        $p->Text($left+$fontMargin, $offset+($this->fontSize/8), utf8_decode($title));
     }
 
-    public function tag($tag, $y, $x, $color) {
+    /* public function tag($tag, $y, $x, $color) {
         $p = $this->p;
-
-        $fontMargin = $this->fontSize*2;
 
         if(! isset($this->c['tagCol']) || ! is_numeric($this->c['tagCol'])) {
             $color = '#666666';
         }
 
-        list($r,$g,$b) = $this->formatColor($color);
-        $p->setcolor("both", "rgb", $r, $g, $b, 0);
+        list($r, $g, $b) = $this->formatColor($color);
+        $p->SetDrawColor($r, $g, $b);
+
+        if(isset($this->c['tagCol']) && is_numeric($this->c['tagCol'])) {
+            // $p->Rect($this->mapLeft - $this->c['tagCol'], $y, $this->c['tagCol'], $this->fontSize, "D");
+            // $p->Text($this->mapLeft - $this->c['tagCol'], $y, utf8_decode($tag));
+        } else {
+            $p->Rect($x, $y-($this->fontSize), 20, $this->fontSize, "D");
+            $p->Text($x, $y-($this->fontSize), utf8_decode($tag));
+        }
+
         $optlist = "matchbox={boxheight={ascender descender}
             borderwidth=".$this->lineWidth." strokecolor={rgb $r $g $b}
             offsetleft=-10 offsetright=10 offsettop=4 offsetbottom=0}";
@@ -398,13 +383,13 @@ Class Roadmap {
 
         $info = $p->info_textline($tag, "width", "");
         return $info+$this->fontSize;
-    }
+    } */
 
     public function formatColor($color) {
         if(strpos($color, "#") === 0) {
-            $r = hexdec(substr($color,1,2))/255;
-            $g = hexdec(substr($color,3,2))/255;
-            $b = hexdec(substr($color,5,2))/255;
+            $r = hexdec(substr($color,1,2));
+            $g = hexdec(substr($color,3,2));
+            $b = hexdec(substr($color,5,2));
             return array($r,$g,$b);
         }
         return array(0,0,0);
@@ -457,7 +442,7 @@ Class Roadmap {
                     $value = trim($value);
                     if(! $this->isSize($value)) {
                         throw new Exception("Must be a size (like 123x123) but it is '$value' on line $lineIdx.");
-                    }
+                    } 
 
                     $config[$key] = $value;
 
@@ -542,7 +527,7 @@ Class Roadmap {
                         }
 
                         if($end == false) {
-                            $dates[$partIdx] = array('title'=>$title, 'date'=>$start, 'color'=>$background);
+                            $dates[$partIdx] = array('title'=>$title, 'date'=>$start, 'background'=>$background);
                         }
 
                         $partIdx++;
@@ -572,8 +557,16 @@ Class Roadmap {
         return @preg_match("/^#[a-f0-9]{6}$/i", $str);
     }
 
-    public static function isSize($str) {
+    /* public static function isSize($str) {
         return @preg_match("/^[0-9]{2,5}x[0-9]{2,5}$/i", $str);
+    } */
+
+    public static function isSize($str) {
+        return isset(self::$sizes[strtoupper($str)]);
+    }   
+    
+    public static function toMm($px) {
+        return ($px * 25.4) / 72;
     }
 }
 

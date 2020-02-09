@@ -10,7 +10,7 @@
         exit;
     }
 
-    $defaultRoadmapData = file_get_contents('../data/roadmap-2015.rd');
+    $defaultRoadmapData = file_get_contents('../data/roadmap.rd');
 ?>
 <!DOCTYPE html>
 <html>
