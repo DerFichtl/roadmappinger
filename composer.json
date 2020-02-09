@@ -6,9 +6,13 @@
     "scripts": {
         "post-install-cmd": [
             "cp config/FontVariables.php vendor/mpdf/mpdf/config",
-            "rm vendor/mpdf/mpdf/ttfonts/UnBatang_0613.ttf",
-            "rm vendor/mpdf/mpdf/ttfonts/Sun-*",
-            "rm vendor/mpdf/mpdf/ttfonts/XB*"
+            "rm vendor/mpdf/mpdf/ttfonts/*",
+            "ls -labh vendor"
+        ],
+        "post-update-cmd": [
+            "cp config/FontVariables.php vendor/mpdf/mpdf/config",
+            "rm vendor/mpdf/mpdf/ttfonts/*",
+            "ls -labh vendor"
         ]
     }
 }
