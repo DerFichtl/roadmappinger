@@ -1,8 +1,7 @@
 {
     "functions": {
         "api/*.php": {
-            "runtime": "now-php@0.0.9",
-            "excludeFiles": "vendor/mpdf/mpdf/ttfonts/*"
+            "runtime": "now-php@0.0.9"
         }
     },
     "routes": [

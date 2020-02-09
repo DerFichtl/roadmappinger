@@ -1,0 +1,6 @@
+{
+    "scripts": {
+      "now-build": "rm vendor/mpdf/mpdf/ttfonts/*"
+    }
+}
+  
