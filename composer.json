@@ -2,5 +2,13 @@
     "require": {
         "php": "^7.4",
         "mpdf/mpdf": "^8.0"
+    },
+    "scripts": {
+        "post-install-cmd": [
+            "cp config/FontVariables.php vendor/mpdf/mpdf/config",
+            "rm vendor/mpdf/mpdf/ttfonts/UnBatang_0613.ttf",
+            "rm vendor/mpdf/mpdf/ttfonts/Sun-*",
+            "rm vendor/mpdf/mpdf/ttfonts/XB*"
+        ]
     }
 }
