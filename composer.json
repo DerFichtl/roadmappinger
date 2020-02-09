@@ -1,5 +1,5 @@
 {
-    "name": "DerFichtl/Roadmappinger",
+    "name": "derfichtl/roadmappinger",
     "homepage": "https://github/derfichtl",
     "license": "MIT",
     "require": {
@@ -11,6 +11,9 @@
             "ls -labh vendor"
         ],
         "post-update-cmd": [
+            "ls -labh vendor"
+        ],
+        "pre-autoload-dump": [
             "ls -labh vendor"
         ]
     },
