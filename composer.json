@@ -5,19 +5,5 @@
     "require": {
         "php": "^7.4",
         "mpdf/mpdf": "^8.0"
-    },
-    "scripts": {
-        "post-install-cmd": [
-            "ls -labh vendor"
-        ],
-        "post-update-cmd": [
-            "ls -labh vendor"
-        ],
-        "pre-autoload-dump": [
-            "ls -labh vendor"
-        ]
-    },
-    "suggest": {
-        "monolog/monolog": "Allows more advanced logging of the application flow"
     }
 }
